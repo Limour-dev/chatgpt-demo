@@ -1,6 +1,7 @@
 import { Show } from 'solid-js'
 import type { Accessor, Setter } from 'solid-js'
 import IconEnv from './icons/Env'
+import MessageItem from './MessageItem'
 
 interface Props {
   canEdit: Accessor<boolean>
@@ -28,7 +29,10 @@ export default (props: Props) => {
               <span>System Role:</span>
             </div>
             <div class="mt-1">
-              { props.currentSystemRoleSettings() }
+              <MessageItem
+                role="system"
+                message={props.currentSystemRoleSettings()}
+              />
             </div>
           </div>
         </Show>
