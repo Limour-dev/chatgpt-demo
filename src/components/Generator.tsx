@@ -1,5 +1,5 @@
 import type { ChatMessage } from '@/types'
-import { createSignal, Index, Show } from 'solid-js'
+import { createSignal, Index, Show, onMount, onCleanup } from 'solid-js'
 import IconClear from './icons/Clear'
 import IconRobotDead from './icons/RobotDead'
 import MessageItem from './MessageItem'
@@ -15,6 +15,27 @@ export default () => {
   const [currentAssistantMessage, setCurrentAssistantMessage] = createSignal('')
   const [loading, setLoading] = createSignal(false)
   const [controller, setController] = createSignal<AbortController>(null)
+
+  onMount(() => {
+    try {
+      if(localStorage.getItem('messageList')) {
+        setMessageList(JSON.parse(localStorage.getItem('messageList')))
+        setCurrentSystemRoleSettings(localStorage.getItem('currentSystemRoleSettings'))
+      }
+    }catch(err) {
+      console.error(err)
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    onCleanup(() => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    })
+  })
+
+  const handleBeforeUnload = () => {
+    localStorage.setItem('messageList', JSON.stringify(messageList()))
+    localStorage.setItem('currentSystemRoleSettings', currentSystemRoleSettings())
+  }
 
   let forcedAssistant: HTMLTextAreaElement
   const [forcedAssistantEnabled, setForcedAssistantEnabled] = createSignal(false)
