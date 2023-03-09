@@ -181,6 +181,13 @@ export default () => {
     setCurrentSystemRoleSettings('')
   }
 
+  const localSetCurrentSystemRoleSettings = (localSystemRole) => {
+    if (typeof localSystemRole !== 'string' || currentSystemRoleSettings()) {
+      return;
+    }
+    setCurrentSystemRoleSettings(localSystemRole);
+  }
+
   const stopStreamFetch = () => {
     if (controller()) {
       controller().abort()
@@ -274,7 +281,7 @@ export default () => {
           <button onClick={handleButtonClick} disabled={systemRoleEditing()} h-12 px-4 py-2 bg-slate bg-op-15 hover:bg-op-20 rounded-sm>
             Send
           </button>
-          <button title="Clear" onClick={clear} disabled={systemRoleEditing()} oncontextmenu={setCurrentSystemRoleSettings} h-12 px-4 py-2 bg-slate bg-op-15 hover:bg-op-20 rounded-sm>
+          <button title="Clear" onClick={clear} disabled={systemRoleEditing()} oncontextmenu={localSetCurrentSystemRoleSettings} h-12 px-4 py-2 bg-slate bg-op-15 hover:bg-op-20 rounded-sm>
             <IconClear />
           </button>
           <button title="Forced Assistant" onClick={() => setForcedAssistantEnabled((prev) => !prev)} disabled={systemRoleEditing()} h-12 px-4 py-2 bg-slate bg-op-15 hover:bg-op-20 rounded-sm>
