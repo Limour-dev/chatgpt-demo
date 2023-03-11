@@ -5,6 +5,13 @@ import { verifySignature } from '@/utils/auth'
 import { fetch, ProxyAgent } from 'undici'
 // #vercel-end
 
+const get1Key = (key) => {
+  const arr = key.split("|");
+  const randomIndex = Math.floor(Math.random() * arr.length);
+  const randomSubstr = arr[randomIndex];
+  return randomSubstr;
+}
+
 const apiKey = import.meta.env.OPENAI_API_KEY
 const httpsProxy = import.meta.env.HTTPS_PROXY
 const baseUrl = (import.meta.env.OPENAI_API_BASE_URL || 'https://api.openai.com').trim().replace(/\/$/,'')
@@ -22,7 +29,7 @@ export const post: APIRoute = async (context) => {
   if (import.meta.env.PROD && !await verifySignature({ t: time, m: messages?.[messages.length - 1]?.content || '', }, sign)) {
     return new Response('Invalid signature')
   }
-  const initOptions = generatePayload(apiKey, messages)
+  const initOptions = generatePayload(get1Key(apiKey), messages)
   // #vercel-disable-blocks
   if (httpsProxy) {
     initOptions['dispatcher'] = new ProxyAgent(httpsProxy)
